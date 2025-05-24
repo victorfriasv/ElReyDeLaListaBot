@@ -30,16 +30,6 @@
             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
         }
         
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-        
-        .header p {
-            opacity: 0.9;
-            font-size: 16px;
-        }
-        
         .add-section {
             background: white;
             padding: 20px;
@@ -60,12 +50,6 @@
             border: 2px solid #e1e5e9;
             border-radius: 12px;
             font-size: 16px;
-            transition: border-color 0.3s;
-        }
-        
-        .add-item input:focus {
-            outline: none;
-            border-color: #667eea;
         }
         
         .add-item button {
@@ -77,18 +61,6 @@
             cursor: pointer;
             font-size: 16px;
             font-weight: 600;
-            transition: background 0.3s;
-        }
-        
-        .add-item button:hover {
-            background: #45a049;
-        }
-        
-        .stats {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            color: #666;
         }
         
         .shopping-list {
@@ -103,13 +75,7 @@
             background: white;
             border-radius: 15px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
             border-left: 4px solid #667eea;
-        }
-        
-        .list-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
         }
         
         .list-item.purchased {
@@ -152,11 +118,6 @@
             padding: 8px 12px;
             cursor: pointer;
             font-size: 14px;
-            transition: background 0.3s;
-        }
-        
-        .delete-btn:hover {
-            background: #c82333;
         }
         
         .empty-state {
@@ -165,25 +126,11 @@
             color: #6c757d;
         }
         
-        .empty-state h3 {
-            font-size: 20px;
-            margin-bottom: 8px;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #6c757d;
-        }
-        
-        .offline-mode {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #856404;
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #666;
         }
     </style>
 </head>
@@ -191,10 +138,6 @@
     <div class="header">
         <h1>🛒 Lista de Compra</h1>
         <p>Colaborativa y en tiempo real</p>
-    </div>
-    
-    <div id="offlineMode" class="offline-mode" style="display: none;">
-        📱 Modo sin conexión - Los cambios se guardarán localmente
     </div>
     
     <div class="add-section">
@@ -209,7 +152,10 @@
     </div>
     
     <ul class="shopping-list" id="shoppingList">
-        <li class="loading">Cargando lista...</li>
+        <li class="empty-state">
+            <h3>📝 Lista vacía</h3>
+            <p>¡Añade tu primer item arriba!</p>
+        </li>
     </ul>
 
     <script>
@@ -217,48 +163,29 @@
         let chatId = null;
         let currentUser = null;
         let shoppingList = [];
-        let isOnlineMode = false;
         
         // Configurar la web app
         tg.ready();
         tg.expand();
         
-        // Obtener información del usuario
+        // Obtener información del usuario y chat
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             currentUser = tg.initDataUnsafe.user;
-            chatId = tg.initDataUnsafe.chat?.id || tg.initDataUnsafe.user.id;
-            isOnlineMode = true;
+            // Intentar obtener chat_id de diferentes formas
+            chatId = tg.initDataUnsafe.chat?.id || 
+                     tg.initDataUnsafe.start_param || 
+                     new URLSearchParams(window.location.search).get('chat') ||
+                     'demo';
         } else {
-            // Modo demo sin Telegram
-            currentUser = { id: 1, username: 'Usuario', first_name: 'Demo' };
+            // Modo demo
+            currentUser = { id: 1, username: 'Demo', first_name: 'Usuario' };
             chatId = 'demo';
-            document.getElementById('offlineMode').style.display = 'block';
         }
         
         // Cargar lista inicial
         loadShoppingList();
         
-        // Actualizar cada 5 segundos si está en modo online
-        if (isOnlineMode) {
-            setInterval(loadShoppingList, 5000);
-        }
-        
         function loadShoppingList() {
-            if (isOnlineMode) {
-                // Intentar cargar desde servidor (cuando esté implementado)
-                loadFromServer();
-            } else {
-                // Cargar desde localStorage
-                loadFromLocalStorage();
-            }
-        }
-        
-        function loadFromServer() {
-            // Por ahora usar localStorage hasta que implementes el backend
-            loadFromLocalStorage();
-        }
-        
-        function loadFromLocalStorage() {
             const stored = localStorage.getItem(`shopping_list_${chatId}`);
             if (stored) {
                 shoppingList = JSON.parse(stored);
@@ -403,12 +330,6 @@
             tg.MainButton.text = "Añadir Item";
             tg.MainButton.show();
             tg.MainButton.onClick(addItem);
-        }
-        
-        // Configurar tema
-        if (tg.colorScheme === 'dark') {
-            document.body.style.background = '#1a1a1a';
-            document.body.style.color = '#ffffff';
         }
     </script>
 </body>
